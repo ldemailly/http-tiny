@@ -1,10 +1,11 @@
 /*
- * Adonis project / software utilities:
  *  Http put/get mini lib
  *  written by L. Demailly
+ *  (c) 1998 Laurent Demailly - http://www.demailly.com/~dl/
  *  (c) 1996 Observatoire de Paris - Meudon - France
+ *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http_lib.h,v 1.2 1996/04/18 12:18:31 dl Exp dl $
+ * $Id: http_lib.h,v 1.3 1996/04/24 13:55:49 dl Exp dl $
  *
  */
 
