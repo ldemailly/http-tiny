@@ -4,11 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.7 1996/04/17 08:12:49 dl Exp dl $ 
+ * $Id: http_lib.c,v 2.0 1996/04/17 14:52:05 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
- * $Log: http_put.c,v $
+ * $Log: http_lib.c,v $
+ * Revision 2.0  1996/04/17  14:52:05  dl
+ * Major rewrite, using utility functions, commented for c2man
+ * added http_get
+ *
  * Revision 1.7  1996/04/17  08:12:49  dl
  * uh! missing n++ in read_line, was always returning failure
  *
@@ -35,7 +39,7 @@
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.7 1996/04/17 08:12:49 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 2.0 1996/04/17 14:52:05 dl Exp dl $";
 
 #define VERBOSE
 
@@ -186,7 +190,7 @@ static return_code http_query(command, additional_header, mode,
     
     /* create header */
     sprintf(header,
-	"%s HTTP/1.0\012User-Agent: adlib/1.0 ($Version:$)\012%s\012",
+	"%s HTTP/1.0\012User-Agent: adlib/2 ($Revision:$)\012%s\012",
 	    command,
 	    additional_header
 	    );
