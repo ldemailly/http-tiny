@@ -4,51 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 2.3 1996/04/18 08:00:55 dl Exp dl $ 
+ * $Id: http_lib.c,v 2.4 1996/04/18 12:21:11 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
- * Revision 2.3  1996/04/18  08:00:55  dl
- * outputing header on stderr. bug fix on get (no header). OS9 compat defs.
- *
- * Revision 2.2  1996/04/17  14:58:12  dl
- * using Date: rcs keyword
- *
- * Revision 2.1  1996/04/17  14:54:12  dl
- * rcs keyword/version fix
- *
- * Revision 2.0  1996/04/17  14:52:05  dl
- * Major rewrite, using utility functions, commented for c2man
- * added http_get
- *
- * Revision 1.7  1996/04/17  08:12:49  dl
- * uh! missing n++ in read_line, was always returning failure
- *
- * Revision 1.6  1996/04/16  15:31:39  dl
- * new read_line function, showing infos with ifdef VERBOSE
- *
- * Revision 1.5  1996/04/16  15:00:47  dl
- * OS9 compatibilty define. \n -> \012 to be sure to have a LF
- *
- * Revision 1.4  1996/04/16  14:32:32  dl
- * big error in memmove (mixed src dest 'cause of bcopy)
- * cleanup - allow sliced reads
- *
- * Revision 1.3  1996/04/16  12:13:44  dl
- * added overwrite optional parameter
- *
- * Revision 1.2  1996/04/16  10:24:19  dl
- * server name and port as global variables instead of defines (changeable)
- * rewrote more compact
- *
- * Revision 1.1  1996/04/16  09:11:05  dl
- * Initial revision
- *
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 2.3 1996/04/18 08:00:55 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 2.4 1996/04/18 12:21:11 dl Exp dl $";
 
 #define VERBOSE
 
@@ -56,17 +20,7 @@ static char *rcsid="$Id: http_lib.c,v 2.3 1996/04/18 08:00:55 dl Exp dl $";
  */
 
 
-#ifdef OSK
-/* OS/9 includes */
-#include <modes.h>
-#include <types.h>
-#include <machine/reg.h>
-#include <INET/socket.h>
-#include <INET/in.h>
-#include <INET/netdb.h>
-#include <INET/pwd.h>
-extern char *malloc();
-#else
+#ifndef OSK
 /* unix */
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -80,7 +34,16 @@ extern char *malloc();
 
 static int http_read_line (int fd,char *buffer, int max) ;
 static int http_read_buffer (int fd,char *buffer, int max) ;
-
+#else
+/* OS/9 includes */
+#include <modes.h>
+#include <types.h>
+#include <machine/reg.h>
+#include <INET/socket.h>
+#include <INET/in.h>
+#include <INET/netdb.h>
+#include <INET/pwd.h>
+extern char *malloc();
 #endif /* OS9/Unix */
 
 #include <stdio.h>
@@ -204,7 +167,7 @@ static http_retcode http_query(command, additional_header, mode,
     
     /* create header */
     sprintf(header,
- "%s HTTP/1.0\012User-Agent: adlib/2 ($Date: 1996/04/18 08:00:55 $)\012%s\012",
+ "%s HTTP/1.0\012User-Agent: adlib/2 ($Date: 1996/04/18 12:21:11 $)\012%s\012",
 	    command,
 	    additional_header
 	    );
