@@ -4,7 +4,7 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.h,v 1.1 1996/04/18 09:02:04 dl Exp dl $
+ * $Id: http_lib.h,v 1.2 1996/04/18 12:18:31 dl Exp dl $
  *
  */
 
@@ -14,6 +14,10 @@
 extern char *http_server;
 
 extern int http_port;
+
+extern char *http_proxy_server;
+
+extern int http_proxy_port;
 
 
 /* return type */
