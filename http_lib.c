@@ -4,12 +4,16 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.3 1996/04/16 12:13:44 dl Exp dl $ 
+ * $Id: http_put.c,v 1.4 1996/04/16 14:32:32 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to send a packet
  *               
  *
  * $Log: http_put.c,v $
+ * Revision 1.4  1996/04/16  14:32:32  dl
+ * big error in memmove (mixed src dest 'cause of bcopy)
+ * cleanup - allow sliced reads
+ *
  * Revision 1.3  1996/04/16  12:13:44  dl
  * added overwrite optional parameter
  *
@@ -23,24 +27,40 @@
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.3 1996/04/16 12:13:44 dl Exp dl $";
+static char *rcsid="$Id: http_put.c,v 1.4 1996/04/16 14:32:32 dl Exp dl $";
 
+
+#ifdef OSK
+/* OS/9 includes */
+#include <modes.h>
+#include <types.h>
+#include <machine/reg.h>
+#include <INET/socket.h>
+#include <INET/in.h>
+#include <INET/netdb.h>
+#include <INET/pwd.h>
+#else
+/* unix */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-char *http_server="hplyot";
-int  http_port=5757;
 
 
 /* prototype */
 int http_put(char *filename, char *data, int length, 
 	     int overwrite, char *type) ;
+
+#endif /* OS9/Unix */
+
+#include <stdio.h>
+
+char *http_server="adonis";
+int  http_port=5757;
+
 
 int http_put(filename, data, length, overwrite, type) 
      char *filename,*data,*type;
@@ -73,11 +93,11 @@ int http_put(filename, data, length, overwrite, type)
 
     /* create header */
     sprintf(header,
-	    "PUT /%s HTTP/1.0\nContent-length: %d\nContent-type: %s\n%s\n",
+	"PUT /%s HTTP/1.0\012Content-length: %d\012Content-type: %s\012%s\012",
 	    filename,
 	    length,
 	    type ? type : "binary/octet-stream",
-	    overwrite ? "Control: overwrite=1\n" : ""
+	    overwrite ? "Control: overwrite=1\012" : ""
 	    );
     hlg=strlen(header);
 
