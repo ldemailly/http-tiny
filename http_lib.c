@@ -4,12 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.5 1996/04/16 15:00:47 dl Exp dl $ 
+ * $Id: http_put.c,v 1.6 1996/04/16 15:31:39 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to send a packet
  *               
  *
  * $Log: http_put.c,v $
+ * Revision 1.6  1996/04/16  15:31:39  dl
+ * new read_line function, showing infos with ifdef VERBOSE
+ *
  * Revision 1.5  1996/04/16  15:00:47  dl
  * OS9 compatibilty define. \n -> \012 to be sure to have a LF
  *
@@ -30,7 +33,7 @@
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.5 1996/04/16 15:00:47 dl Exp dl $";
+static char *rcsid="$Id: http_put.c,v 1.6 1996/04/16 15:31:39 dl Exp dl $";
 
 #define VERBOSE
 
@@ -76,6 +79,7 @@ static int read_line (fd,buffer,max)
       n= -n;
       break;
     }
+    n++;
     if ((*buffer=='\012')||(*buffer=='\015')) break;
     buffer++;
   }
