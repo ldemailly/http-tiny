@@ -4,18 +4,23 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 3.1 1996/04/18 13:53:13 dl Exp dl $ 
+ * $Id: http_lib.c,v 3.2 1996/04/24 13:56:08 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 3.2  1996/04/24  13:56:08  dl
+ * added proxy support through http_proxy_server & http_proxy_port
+ * some httpd *needs* cr+lf so provide them
+ * simplification + cleanup
+ *
  * Revision 3.1  1996/04/18  13:53:13  dl
  * http-tiny release 1.0
  *
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 3.1 1996/04/18 13:53:13 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 3.2 1996/04/24 13:56:08 dl Exp dl $";
 
 #define VERBOSE
 
@@ -64,7 +69,7 @@ char *http_proxy_server=NULL;
 /* proxy server port number or 0 */
 int http_proxy_port=0;
 /* user agent id string */
-static char *http_user_agent="adlib/3 ($Date: 1996/04/18 13:53:13 $)";
+static char *http_user_agent="adlib/3 ($Date: 1996/04/24 13:56:08 $)";
 
 /*
  * read a line from file descriptor
@@ -158,6 +163,7 @@ static http_retcode http_query(command, url, additional_header, mode,
   int  hlg;
   http_retcode ret;
   int  proxy=(http_proxy_server!=NULL && http_proxy_port!=0);
+  int  port = proxy ? http_proxy_port : http_port ;
   
   if (pfd) *pfd=-1;
 
@@ -169,8 +175,7 @@ static http_retcode http_query(command, url, additional_header, mode,
     memset((char *) &server,0, sizeof(server));
     memmove((char *) &server.sin_addr, hp->h_addr, hp->h_length);
     server.sin_family = hp->h_addrtype;
-    server.sin_port = (unsigned short) htons( proxy ? http_proxy_port 
-					            : http_port        ) ;
+    server.sin_port = (unsigned short) htons( port );
   } else
     return ERRHOST;
 
