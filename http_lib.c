@@ -1,14 +1,18 @@
 /*
- * Adonis project / software utilities:
  *  Http put/get mini lib
  *  written by L. Demailly
+ *  (c) 1998 Laurent Demailly - http://www.demailly.com/~dl/
  *  (c) 1996 Observatoire de Paris - Meudon - France
+ *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http_lib.c,v 3.3 1996/04/25 19:07:22 dl Exp dl $ 
+ * $Id: http_lib.c,v 3.4 1998/09/23 05:44:27 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 3.4  1998/09/23 05:44:27  dl
+ * added support for HTTP/1.x answers
+ *
  * Revision 3.3  1996/04/25 19:07:22  dl
  * using intermediate variable for htons (port) so it does not yell
  * on freebsd  (thx pp for report)
@@ -24,7 +28,7 @@
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 3.3 1996/04/25 19:07:22 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 3.4 1998/09/23 05:44:27 dl Exp dl $";
 
 #define VERBOSE
 
@@ -73,7 +77,7 @@ char *http_proxy_server=NULL;
 /* proxy server port number or 0 */
 int http_proxy_port=0;
 /* user agent id string */
-static char *http_user_agent="adlib/3 ($Date: 1996/04/25 19:07:22 $)";
+static char *http_user_agent="adlib/3 ($Date: 1998/09/23 05:44:27 $)";
 
 /*
  * read a line from file descriptor
@@ -313,7 +317,7 @@ http_retcode http_get(filename, pdata, plength, typebuf)
   if (plength) *plength=0;
   if (typebuf) *typebuf='\0';
 
-  ret=http_query("GET",filename,"",KEEP_OPEN, NULL, NULL, &fd);
+  ret=http_query("GET",filename,"",KEEP_OPEN, NULL, 0, &fd);
   if (ret==200) {
     while (1) {
       n=http_read_line(fd,header,MAXBUF-1);
@@ -379,7 +383,7 @@ http_retcode http_head(filename, plength, typebuf)
   if (plength) *plength=0;
   if (typebuf) *typebuf='\0';
 
-  ret=http_query("HEAD",filename,"",KEEP_OPEN, NULL, NULL, &fd);
+  ret=http_query("HEAD",filename,"",KEEP_OPEN, NULL, 0, &fd);
   if (ret==200) {
     while (1) {
       n=http_read_line(fd,header,MAXBUF-1);
