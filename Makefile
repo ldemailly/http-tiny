@@ -5,9 +5,8 @@
 #  (c)1998 Laurent Demailly
 #  (c)1996 Observatoire de Paris
 #
-# $Id: Makefile,v 1.3 1996/04/15 14:25:24 dl Exp $
+# $Id: Makefile,v 1.1 1998/09/23 05:39:40 dl Exp dl $
 #
-# $Log: Makefile,v $
 #
 
 # Check the following :
@@ -29,15 +28,16 @@ CC = gcc
 CDEBUGFLAGS = -O -Wmissing-prototypes -Wall -ansi -pedantic
 #CDEBUGFLAGS = -O
 
-# defines
-#DEFINES= -D_HPUX_SOURCE
+# defines (needed for string ops on linux2/glibc for instance):
+DEFINES= -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED
+
 # for HPUX (ansi)
 #DEFINES= -D_HPUX_SOURCE
-# for solaris some defines is needed for strncmp,... but can't find the good
-# one...
+# for solaris some defines are needed for strncmp,... but can't find the good
+# one... maybe the one above (for linux) work too, I haven't checked yet.
 #DEFINES= -D
-# others, probably
-DEFINES= -DVERBOSE
+# others, may need something...
+
 
 # Solaris
 #SYSLIBS= -lsocket -lnsl
@@ -114,11 +114,9 @@ tar:
 	$(TAR) cf - man3 | (cd http-tiny-$(VERSION) ; $(TAR) xvf - )
 	$(TAR) cvfz http-tiny-$(VERSION).tar.gz http-tiny-$(VERSION)
 
-distrib: tar
-	$(CP) http-tiny-$(VERSION).tar.gz /poubelle/ftp/www/
-	$(CP) http-tiny-$(VERSION).tar.gz /users/dl/public_html/
+#distrib: tar
+#	$(CP) http-tiny-$(VERSION).tar.gz /poubelle/ftp/www/
+#	$(CP) http-tiny-$(VERSION).tar.gz /users/dl/public_html/
 
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
-
-
