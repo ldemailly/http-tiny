@@ -4,19 +4,23 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.1 1996/04/16 09:11:05 dl Exp dl $ 
+ * $Id: http_put.c,v 1.2 1996/04/16 10:24:19 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to send a packet
  *               
  *
  * $Log: http_put.c,v $
+ * Revision 1.2  1996/04/16  10:24:19  dl
+ * server name and port as global variables instead of defines (changeable)
+ * rewrote more compact
+ *
  * Revision 1.1  1996/04/16  09:11:05  dl
  * Initial revision
  *
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.1 1996/04/16 09:11:05 dl Exp dl $";
+static char *rcsid="$Id: http_put.c,v 1.2 1996/04/16 10:24:19 dl Exp dl $";
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -32,11 +36,12 @@ int  http_port=5757;
 
 
 /* prototype */
-int http_put(char *filename, char *data, int length, char *type) ;
+int http_put(char *filename, char *data, int length, 
+	     int overwrite, char *type) ;
 
-int http_put(filename, data, length, type) 
+int http_put(filename, data, length, overwrite, type) 
      char *filename,*data,*type;
-     int length;
+     int length,overwrite;
 {
   int     s;
   struct  hostent *hp;
@@ -59,9 +64,9 @@ int http_put(filename, data, length, type)
 /* connect to server */
   if (connect(s, &server, sizeof(server)) < 0) {close(s); return (-3);}
 /* create header */
-  if (!type) type="binary/octet-stream";
-  sprintf(header,"PUT /%s HTTP/1.0\nContent-length: %d\nContent-type: %s\n\n",
-	  filename,length,type);
+  sprintf(header,"PUT /%s HTTP/1.0\nContent-length: %d\nContent-type: %s\n%s\n",
+	  filename,length,type?type:"binary/octet-stream",
+	  overwrite?"Control: overwrite=1\n":"");
   hlg=strlen(header);
 /* send header */
   if (write(s,header,hlg)!=hlg) {close(s); return (-4);}
