@@ -4,16 +4,16 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.1 1996/04/18 08:53:20 dl Exp dl $
+ * $Id: http.c,v 1.1 1996/04/18 12:17:25 dl Exp dl $
  *
- * $Log: http_put.c,v $
- * Revision 1.1  1996/04/18  08:53:20  dl
+ * $Log: http.c,v $
+ * Revision 1.1  1996/04/18  12:17:25  dl
  * Initial revision
  *
  */
 
 
-static char *rcsid="$Id: http_put.c,v 1.1 1996/04/18 08:53:20 dl Exp dl $";
+static char *rcsid="$Id: http.c,v 1.1 1996/04/18 12:17:25 dl Exp dl $";
 
 
 #include <sys/types.h>
@@ -21,7 +21,7 @@ static char *rcsid="$Id: http_put.c,v 1.1 1996/04/18 08:53:20 dl Exp dl $";
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include "http_lib.h"
 
