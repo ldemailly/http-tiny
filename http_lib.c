@@ -4,12 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.2 1996/04/16 10:24:19 dl Exp dl $ 
+ * $Id: http_put.c,v 1.3 1996/04/16 12:13:44 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to send a packet
  *               
  *
  * $Log: http_put.c,v $
+ * Revision 1.3  1996/04/16  12:13:44  dl
+ * added overwrite optional parameter
+ *
  * Revision 1.2  1996/04/16  10:24:19  dl
  * server name and port as global variables instead of defines (changeable)
  * rewrote more compact
@@ -20,7 +23,7 @@
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.2 1996/04/16 10:24:19 dl Exp dl $";
+static char *rcsid="$Id: http_put.c,v 1.3 1996/04/16 12:13:44 dl Exp dl $";
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -47,42 +50,67 @@ int http_put(filename, data, length, overwrite, type)
   struct  hostent *hp;
   struct  sockaddr_in     server;
   char header[512];
-  int hlg,ret;
+  int  hlg,ret,remaining,off;
   
-/* get host info by name :*/
+  /* get host info by name :*/
   if ((hp = gethostbyname(http_server))) {
     memset((char *) &server,0, sizeof(server));
-    memcpy(hp->h_addr, (char *) &server.sin_addr, hp->h_length);
+    memmove((char *) &server.sin_addr, hp->h_addr, hp->h_length);
     server.sin_family = hp->h_addrtype;
-  } else {
-    return (-1);
-  }
-  server.sin_port = (unsigned short) htons(http_port);
-/* create socket */
-  if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) return (-2);
+    server.sin_port = (unsigned short) htons(http_port);
+  } else
+    return -1;
+
+  /* create socket */
+  if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    return -2;
   setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, 0, 0);
-/* connect to server */
-  if (connect(s, &server, sizeof(server)) < 0) {close(s); return (-3);}
-/* create header */
-  sprintf(header,"PUT /%s HTTP/1.0\nContent-length: %d\nContent-type: %s\n%s\n",
-	  filename,length,type?type:"binary/octet-stream",
-	  overwrite?"Control: overwrite=1\n":"");
-  hlg=strlen(header);
-/* send header */
-  if (write(s,header,hlg)!=hlg) {close(s); return (-4);}
-/* send data */
-  if (write(s,data,length)!=length) {close(s); return (-5);}
-/* check return */
-  if (read(s,header,12)!=12) {close(s); return (-6);}
-/* close socket */
+
+  /* connect to server */
+  if (connect(s, &server, sizeof(server)) < 0) 
+    ret=-3;
+  else {
+
+    /* create header */
+    sprintf(header,
+	    "PUT /%s HTTP/1.0\nContent-length: %d\nContent-type: %s\n%s\n",
+	    filename,
+	    length,
+	    type ? type : "binary/octet-stream",
+	    overwrite ? "Control: overwrite=1\n" : ""
+	    );
+    hlg=strlen(header);
+
+    /* send header */
+    if (write(s,header,hlg)!=hlg)
+      ret= -4;
+
+    /* send data */
+    else if (write(s,data,length)!=length) 
+      ret= -5;
+
+    else {
+      /* read result & check */
+      for (remaining=12, off=0; 
+	   remaining && (ret=read(s,header+off,remaining)) != 0 ;
+	   remaining -= ret, off+= ret
+	   ) /* nothing more to do (everything in the for) */
+#ifdef DEBUG
+	printf("read %d bytes\n",ret);
+#endif	
+        ;
+      header[off]=0;
+#ifdef DEBUG
+      printf("read='%s'\n",header);
+#endif	
+      if (!ret) 
+	ret=-6;
+      else if (sscanf(header,"HTTP/1.0 %03d",&ret)!=1) 
+	  ret=-7;
+    }
+  }
+  /* close socket */
   close(s);
-  header[13]=0;
-  if (sscanf(header,"HTTP/1.0 %03d",&ret)!=1) {return (-7);}
   return ret;
 }
-
-      
-  
-
-
 
