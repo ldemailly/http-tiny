@@ -4,11 +4,14 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 2.0 1996/04/17 14:52:05 dl Exp dl $ 
+ * $Id: http_lib.c,v 2.1 1996/04/17 14:54:12 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 2.1  1996/04/17  14:54:12  dl
+ * rcs keyword/version fix
+ *
  * Revision 2.0  1996/04/17  14:52:05  dl
  * Major rewrite, using utility functions, commented for c2man
  * added http_get
@@ -39,7 +42,7 @@
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 2.0 1996/04/17 14:52:05 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 2.1 1996/04/17 14:54:12 dl Exp dl $";
 
 #define VERBOSE
 
@@ -190,7 +193,7 @@ static return_code http_query(command, additional_header, mode,
     
     /* create header */
     sprintf(header,
-	"%s HTTP/1.0\012User-Agent: adlib/2 ($Revision:$)\012%s\012",
+ "%s HTTP/1.0\012User-Agent: adlib/2 ($Date:$)\012%s\012",
 	    command,
 	    additional_header
 	    );
