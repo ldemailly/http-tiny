@@ -5,9 +5,13 @@
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http.c,v 1.2 1996/04/18 13:52:14 dl Exp dl $
+ * $Id: http.c,v 1.3 1998/09/23 06:03:45 dl Exp dl $
  *
  * $Log: http.c,v $
+ * Revision 1.3  1998/09/23 06:03:45  dl
+ * proxy support (old change which was not checked in back in 96)
+ * contact, etc.. infos update
+ *
  * Revision 1.2  1996/04/18  13:52:14  dl
  * strings.h->string.h
  *
@@ -17,7 +21,7 @@
  */
 
 
-static char *rcsid="$Id: http.c,v 1.2 1996/04/18 13:52:14 dl Exp dl $";
+static char *rcsid="$Id: http.c,v 1.3 1998/09/23 06:03:45 dl Exp dl $";
 
 
 #include <sys/types.h>
@@ -45,7 +49,7 @@ int main(argc,argv)
   } todo=ERR;
 
   if (argc!=3) {
-    fprintf(stderr,"usage: http <cmd> <url>\n\tby <dl@hplyot.obspm.fr>\n");
+    fprintf(stderr,"usage: http <cmd> <url>\n\tby <L@Demailly.com>\n");
     return 1;
   }
   i=1;
