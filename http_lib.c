@@ -4,11 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 3.2 1996/04/24 13:56:08 dl Exp dl $ 
+ * $Id: http_lib.c,v 3.3 1996/04/25 19:07:22 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 3.3  1996/04/25 19:07:22  dl
+ * using intermediate variable for htons (port) so it does not yell
+ * on freebsd  (thx pp for report)
+ *
  * Revision 3.2  1996/04/24  13:56:08  dl
  * added proxy support through http_proxy_server & http_proxy_port
  * some httpd *needs* cr+lf so provide them
@@ -20,7 +24,7 @@
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 3.2 1996/04/24 13:56:08 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 3.3 1996/04/25 19:07:22 dl Exp dl $";
 
 #define VERBOSE
 
@@ -69,7 +73,7 @@ char *http_proxy_server=NULL;
 /* proxy server port number or 0 */
 int http_proxy_port=0;
 /* user agent id string */
-static char *http_user_agent="adlib/3 ($Date: 1996/04/24 13:56:08 $)";
+static char *http_user_agent="adlib/3 ($Date: 1996/04/25 19:07:22 $)";
 
 /*
  * read a line from file descriptor
@@ -230,7 +234,7 @@ static http_retcode http_query(command, url, additional_header, mode,
 #endif	
       if (ret<=0) 
 	ret=ERRRDHD;
-      else if (sscanf(header,"HTTP/1.0 %03d",(int*)&ret)!=1) 
+      else if (sscanf(header,"HTTP/1.%*d %03d",(int*)&ret)!=1) 
 	  ret=ERRPAHD;
       else if (mode==KEEP_OPEN)
 	return ret;
