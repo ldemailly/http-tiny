@@ -4,11 +4,14 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 2.1 1996/04/17 14:54:12 dl Exp dl $ 
+ * $Id: http_lib.c,v 2.2 1996/04/17 14:58:12 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 2.2  1996/04/17  14:58:12  dl
+ * using Date: rcs keyword
+ *
  * Revision 2.1  1996/04/17  14:54:12  dl
  * rcs keyword/version fix
  *
@@ -42,7 +45,7 @@
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 2.1 1996/04/17 14:54:12 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 2.2 1996/04/17 14:58:12 dl Exp dl $";
 
 #define VERBOSE
 
@@ -59,6 +62,7 @@ static char *rcsid="$Id: http_lib.c,v 2.1 1996/04/17 14:54:12 dl Exp dl $";
 #include <INET/in.h>
 #include <INET/netdb.h>
 #include <INET/pwd.h>
+extern char *malloc();
 #else
 /* unix */
 #include <sys/types.h>
@@ -193,7 +197,7 @@ static return_code http_query(command, additional_header, mode,
     
     /* create header */
     sprintf(header,
- "%s HTTP/1.0\012User-Agent: adlib/2 ($Date:$)\012%s\012",
+ "%s HTTP/1.0\012User-Agent: adlib/2 ($Date: 1996/04/17 14:58:12 $)\012%s\012",
 	    command,
 	    additional_header
 	    );
@@ -211,7 +215,8 @@ static return_code http_query(command, additional_header, mode,
       /* read result & check */
       ret=http_read_line(s,header,MAXBUF-1);
 #ifdef VERBOSE
-      printf("http result line (%d)='%s'\n",ret,header);
+      fputs(header,stderr);
+      putc('\n',stderr);
 #endif	
       if (ret<=0) 
 	ret=ERRRDHD;
@@ -293,12 +298,13 @@ return_code http_get(filename, pdata, plength, typebuf)
   if (typebuf) *typebuf='\0';
 
   sprintf(command,"GET /%.256s",filename); /* limit filename to 256 chars */
-  ret=http_query(command,header,KEEP_OPEN, NULL, NULL, &fd);
+  ret=http_query(command,"",KEEP_OPEN, NULL, NULL, &fd);
   if (ret==200) {
     while (1) {
       n=http_read_line(fd,header,MAXBUF-1);
 #ifdef VERBOSE
-      printf("http result line (%d)='%s'\n",n,header);
+      fputs(header,stderr);
+      putc('\n',stderr);
 #endif	
       if (n<=0) {
 	close(fd);
