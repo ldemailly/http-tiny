@@ -1,19 +1,23 @@
 /*
- * Adonis project / software utilities:
  *  Http put/get/.. standalone program using Http put mini lib
  *  written by L. Demailly
+ *  (c) 1998 Laurent Demailly - http://www.demailly.com/~dl/
  *  (c) 1996 Observatoire de Paris - Meudon - France
+ *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http.c,v 1.1 1996/04/18 12:17:25 dl Exp dl $
+ * $Id: http.c,v 1.2 1996/04/18 13:52:14 dl Exp dl $
  *
  * $Log: http.c,v $
+ * Revision 1.2  1996/04/18  13:52:14  dl
+ * strings.h->string.h
+ *
  * Revision 1.1  1996/04/18  12:17:25  dl
  * Initial revision
  *
  */
 
 
-static char *rcsid="$Id: http.c,v 1.1 1996/04/18 12:17:25 dl Exp dl $";
+static char *rcsid="$Id: http.c,v 1.2 1996/04/18 13:52:14 dl Exp dl $";
 
 
 #include <sys/types.h>
@@ -31,7 +35,7 @@ int main(argc,argv)
 {
   int  ret,lg,blocksize,r,i;
   char typebuf[70];
-  char *data=NULL,*filename=NULL;
+  char *data=NULL,*filename=NULL,*proxy=NULL;
   enum {
     ERR,
     DOPUT,
@@ -39,7 +43,7 @@ int main(argc,argv)
     DODEL,
     DOHEA
   } todo=ERR;
-  
+
   if (argc!=3) {
     fprintf(stderr,"usage: http <cmd> <url>\n\tby <dl@hplyot.obspm.fr>\n");
     return 1;
@@ -63,8 +67,17 @@ int main(argc,argv)
   }
   i++;
   
+
+  if ((proxy=getenv("http_proxy"))) {
+    ret=http_parse_url(proxy,&filename);
+    if (ret<0) return ret;
+    http_proxy_server=http_server;
+    http_server=NULL;
+    http_proxy_port=http_port;
+  }
+
   ret=http_parse_url(argv[i],&filename);
-  if (ret<0) return ret;
+  if (ret<0) {if (proxy) free(http_proxy_server); return ret;}
 
   switch (todo) {
 /* *** PUT  *** */
@@ -82,7 +95,8 @@ int main(argc,argv)
 	lg+=r;
 	if ((3*lg/2)>blocksize) {
 	  blocksize *= 4;
-	  fprintf(stderr,"read to date: %9d bytes, reallocating buffer to %9d\n",
+	  fprintf(stderr,
+		  "read to date: %9d bytes, reallocating buffer to %9d\n",
 		  lg,blocksize);	
 	  if (!(data=realloc(data,blocksize))) {
 	    return 4;
@@ -117,6 +131,7 @@ int main(argc,argv)
   if (data) free(data);
   free(filename);
   free(http_server);
+  if (proxy) free(http_proxy_server);
   
   return ( (ret==201) || (ret==200) ) ? 0 : ret;
 }
