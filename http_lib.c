@@ -4,15 +4,18 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_lib.c,v 2.4 1996/04/18 12:21:11 dl Exp dl $ 
+ * $Id: http_lib.c,v 3.1 1996/04/18 13:53:13 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 3.1  1996/04/18  13:53:13  dl
+ * http-tiny release 1.0
+ *
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 2.4 1996/04/18 12:21:11 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 3.1 1996/04/18 13:53:13 dl Exp dl $";
 
 #define VERBOSE
 
@@ -56,6 +59,12 @@ extern char *malloc();
 char *http_server=NULL ;
 /* server port number */
 int  http_port=5757;
+/* pointer to proxy server name or NULL */
+char *http_proxy_server=NULL;
+/* proxy server port number or 0 */
+int http_proxy_port=0;
+/* user agent id string */
+static char *http_user_agent="adlib/3 ($Date: 1996/04/18 13:53:13 $)";
 
 /*
  * read a line from file descriptor
@@ -113,7 +122,7 @@ typedef enum
 
 #ifndef OSK
 
-static http_retcode http_query(char *command, 
+static http_retcode http_query(char *command, char *url,
 			       char *additional_header, querymode mode, 
 			       char* data, int length, int *pfd);
 #endif
@@ -125,11 +134,17 @@ static http_retcode http_query(char *command,
 /*
  * Pseudo general http query
  *
- * send a command and additional headers to the http server
+ * send a command and additional headers to the http server.
+ * optionally through the proxy (if http_proxy_server and http_proxy_port are
+ * set).
+ *
+ * Limitations: the url is truncated to first 256 chars and
+ * the server name to 128 in case of proxy request.
  */
-static http_retcode http_query(command, additional_header, mode,
+static http_retcode http_query(command, url, additional_header, mode,
 			      data, length, pfd) 
-     char *command;		/* command to send  */
+     char *command;	/* command to send  */
+     char *url;		/* url / filename queried  */
      char *additional_header;	/* additional header */
      querymode mode; 		/* type of query */
      char *data;  /* Data to send after header. If NULL, not data is sent */
@@ -142,15 +157,20 @@ static http_retcode http_query(command, additional_header, mode,
   char header[MAXBUF];
   int  hlg;
   http_retcode ret;
+  int  proxy=(http_proxy_server!=NULL && http_proxy_port!=0);
   
   if (pfd) *pfd=-1;
 
   /* get host info by name :*/
-  if ((hp = gethostbyname( http_server ? http_server : SERVER_DEFAULT ))) {
+  if ((hp = gethostbyname( proxy ? http_proxy_server 
+			         : ( http_server ? http_server 
+				                 : SERVER_DEFAULT )
+                         ))) {
     memset((char *) &server,0, sizeof(server));
     memmove((char *) &server.sin_addr, hp->h_addr, hp->h_length);
     server.sin_family = hp->h_addrtype;
-    server.sin_port = (unsigned short) htons(http_port);
+    server.sin_port = (unsigned short) htons( proxy ? http_proxy_port 
+					            : http_port        ) ;
   } else
     return ERRHOST;
 
@@ -166,11 +186,26 @@ static http_retcode http_query(command, additional_header, mode,
     if (pfd) *pfd=s;
     
     /* create header */
-    sprintf(header,
- "%s HTTP/1.0\012User-Agent: adlib/2 ($Date: 1996/04/18 12:21:11 $)\012%s\012",
-	    command,
-	    additional_header
-	    );
+    if (proxy) {
+      sprintf(header,
+"%s http://%.128s:%d/%.256s HTTP/1.0\015\012User-Agent: %s\015\012%s\015\012",
+	      command,
+	      http_server,
+	      http_port,
+	      url,
+	      http_user_agent,
+	      additional_header
+	      );
+    } else {
+      sprintf(header,
+"%s /%.256s HTTP/1.0\015\012User-Agent: %s\015\012%s\015\012",
+	      command,
+	      url,
+	      http_user_agent,
+	      additional_header
+	      );
+    }
+    
     hlg=strlen(header);
 
     /* send header */
@@ -220,15 +255,18 @@ http_retcode http_put(filename, data, length, overwrite, type)
 			 was already existing */
      char *type;      /* type of the data, if NULL default type is used */
 {
-  char command[MAXBUF];
   char header[MAXBUF];
-  sprintf(command,"PUT /%.256s",filename); /* limit filename to 256 chars */
-  sprintf(header,"Content-length: %d\012Content-type: %.64s\012%s",
+  if (type) 
+    sprintf(header,"Content-length: %d\015\012Content-type: %.64s\015\012%s",
 	    length,
-	    type ? type : "binary/octet-stream",
-	    overwrite ? "Control: overwrite=1\012" : ""
+	    type  ,
+	    overwrite ? "Control: overwrite=1\015\012" : ""
 	    );
-  return http_query(command,header,CLOSE, data, length, NULL);
+  else
+    sprintf(header,"Content-length: %d\015\012%s",length,
+	    overwrite ? "Control: overwrite=1\015\012" : ""
+	    );
+  return http_query("PUT",filename,header,CLOSE, data, length, NULL);
 }
 
 
@@ -257,7 +295,6 @@ http_retcode http_get(filename, pdata, plength, typebuf)
 {
   http_retcode ret;
   
-  char command[MAXBUF];
   char header[MAXBUF];
   char *pc;
   int  fd;
@@ -267,8 +304,7 @@ http_retcode http_get(filename, pdata, plength, typebuf)
   if (plength) *plength=0;
   if (typebuf) *typebuf='\0';
 
-  sprintf(command,"GET /%.256s",filename); /* limit filename to 256 chars */
-  ret=http_query(command,"",KEEP_OPEN, NULL, NULL, &fd);
+  ret=http_query("GET",filename,"",KEEP_OPEN, NULL, NULL, &fd);
   if (ret==200) {
     while (1) {
       n=http_read_line(fd,header,MAXBUF-1);
@@ -326,7 +362,6 @@ http_retcode http_head(filename, plength, typebuf)
 /* mostly copied from http_get : */
   http_retcode ret;
   
-  char command[MAXBUF];
   char header[MAXBUF];
   char *pc;
   int  fd;
@@ -335,8 +370,7 @@ http_retcode http_head(filename, plength, typebuf)
   if (plength) *plength=0;
   if (typebuf) *typebuf='\0';
 
-  sprintf(command,"HEAD /%.256s",filename); /* limit filename to 256 chars */
-  ret=http_query(command,"",KEEP_OPEN, NULL, NULL, &fd);
+  ret=http_query("HEAD",filename,"",KEEP_OPEN, NULL, NULL, &fd);
   if (ret==200) {
     while (1) {
       n=http_read_line(fd,header,MAXBUF-1);
@@ -377,9 +411,7 @@ http_retcode http_head(filename, plength, typebuf)
 http_retcode http_delete(filename) 
      char *filename;  /* name of the ressource to create */
 {
-  char command[MAXBUF];
-  sprintf(command,"DELETE /%.256s",filename); /* limit filename to 256 chars */
-  return http_query(command,"",CLOSE, NULL, 0, NULL);
+  return http_query("DELETE",filename,"",CLOSE, NULL, 0, NULL);
 }
 
 
