@@ -4,12 +4,15 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id: http_put.c,v 1.4 1996/04/16 14:32:32 dl Exp dl $ 
+ * $Id: http_put.c,v 1.5 1996/04/16 15:00:47 dl Exp dl $ 
  *
  * Description : Use http protocol, connects to server to send a packet
  *               
  *
  * $Log: http_put.c,v $
+ * Revision 1.5  1996/04/16  15:00:47  dl
+ * OS9 compatibilty define. \n -> \012 to be sure to have a LF
+ *
  * Revision 1.4  1996/04/16  14:32:32  dl
  * big error in memmove (mixed src dest 'cause of bcopy)
  * cleanup - allow sliced reads
@@ -27,8 +30,9 @@
  *
  */
 
-static char *rcsid="$Id: http_put.c,v 1.4 1996/04/16 14:32:32 dl Exp dl $";
+static char *rcsid="$Id: http_put.c,v 1.5 1996/04/16 15:00:47 dl Exp dl $";
 
+#define VERBOSE
 
 #ifdef OSK
 /* OS/9 includes */
@@ -61,6 +65,26 @@ int http_put(char *filename, char *data, int length,
 char *http_server="adonis";
 int  http_port=5757;
 
+static int read_line (fd,buffer,max) 
+     int fd;
+     char *buffer;
+     int max;
+{ /* not efficient on long lines (multiple unbuffered 1 char reads) */
+  int n=0;
+  while (n<max) {
+    if (read(fd,buffer,1)!=1) {
+      n= -n;
+      break;
+    }
+    if ((*buffer=='\012')||(*buffer=='\015')) break;
+    buffer++;
+  }
+  *buffer=0;
+  return n;
+}
+
+
+#define MAXBUF 512
 
 int http_put(filename, data, length, overwrite, type) 
      char *filename,*data,*type;
@@ -69,8 +93,8 @@ int http_put(filename, data, length, overwrite, type)
   int     s;
   struct  hostent *hp;
   struct  sockaddr_in     server;
-  char header[512];
-  int  hlg,ret,remaining,off;
+  char header[MAXBUF];
+  int  hlg,ret;
   
   /* get host info by name :*/
   if ((hp = gethostbyname(http_server))) {
@@ -111,19 +135,11 @@ int http_put(filename, data, length, overwrite, type)
 
     else {
       /* read result & check */
-      for (remaining=12, off=0; 
-	   remaining && (ret=read(s,header+off,remaining)) != 0 ;
-	   remaining -= ret, off+= ret
-	   ) /* nothing more to do (everything in the for) */
-#ifdef DEBUG
-	printf("read %d bytes\n",ret);
+      ret=read_line(s,header,MAXBUF-1);
+#ifdef VERBOSE
+      printf("http result line='%s'\n",header);
 #endif	
-        ;
-      header[off]=0;
-#ifdef DEBUG
-      printf("read='%s'\n",header);
-#endif	
-      if (!ret) 
+      if (ret<=0) 
 	ret=-6;
       else if (sscanf(header,"HTTP/1.0 %03d",&ret)!=1) 
 	  ret=-7;
