@@ -4,18 +4,21 @@
  *  written by L. Demailly
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *
- * $Id:$
+ * $Id: http_lib.h,v 1.1 1996/04/18 09:02:04 dl Exp dl $
  *
  */
 
  /* declarations */
 
+
 extern char *http_server;
 
 extern int http_port;
 
-typedef enum 
-{
+
+/* return type */
+typedef enum {
+
   /* Client side errors */
   ERRHOST=-1, /* No such host */
   ERRSOCK=-2, /* Can't create socket */
@@ -28,6 +31,9 @@ typedef enum
   ERRNOLG=-9, /* No/Bad length in header */
   ERRMEM=-10, /* Can't allocate memory */
   ERRRDDT=-11,/* Read error while reading data */
+  ERRURLH=-12,/* Invalid url - must start with 'http://' */
+  ERRURLP=-13,/* Invalid port in url */
+  
 
   /* Return code by the server */
   ERR400=400, /* Invalid query */
@@ -38,16 +44,24 @@ typedef enum
   ERR503=503, /* Service overloaded */
 
   /* Succesful results */
+  OK0 = 0,   /* successfull parse */
   OK201=201, /* Ressource succesfully created */
   OK200=200  /* Ressource succesfully read */
 
-} return_code;
+} http_retcode;
+
 
 /* prototypes */
 
 #ifndef OSK
-return_code http_put(char *filename, char *data, int length, 
+http_retcode http_put(char *filename, char *data, int length, 
 	     int overwrite, char *type) ;
-return_code http_get(char *filename, char **pdata,int *plength, char *typebuf);
+http_retcode http_get(char *filename, char **pdata,int *plength, char *typebuf);
+
+http_retcode http_parse_url(char *url, char **pfilename);
+
+http_retcode http_delete(char *filename) ;
+
+http_retcode http_head(char *filename, int *plength, char *typebuf);
 
 #endif
