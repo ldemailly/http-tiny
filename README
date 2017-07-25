@@ -1,4 +1,4 @@
- 
+
 *** Http tiny library & command line program  package ***  release 1.2
 (c) 1998 Laurent Demailly       -  see LICENSE
 (c) 1996 Observatoire de Paris
@@ -17,12 +17,14 @@ To compile / INSTALL:
 
 1) EDIT makefile
 2) type  make depend (or remove everything after the # DO NOT DELETE ... line)
-3) type  make  
-   (you might have edit http_lib.c for includes, in that case, 
+3) type  make
+   (you might have edit http_lib.c for includes, in that case,
    Please tell me...)
 4) type  make install
 5) enjoy using "http" and/or the library in your programs (-lhttp)
 6) send feedback and your best uses of the lib to
    <L@Demailly.com> !
 
-Tested succesfully on Linux, Solaris, Hp-Ux(8), and OS/9
+Tested successfully on Linux, Solaris, Hp-Ux(8), and OS/9
+
+2017 Update: works on MacOS too.
