@@ -5,11 +5,14 @@
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http_lib.c,v 3.4 1998/09/23 05:44:27 dl Exp dl $ 
+ * $Id: http_lib.c,v 3.5 1998/09/23 06:19:15 dl Exp $ 
  *
  * Description : Use http protocol, connects to server to echange data
  *
  * $Log: http_lib.c,v $
+ * Revision 3.5  1998/09/23 06:19:15  dl
+ * portability and http 1.x (1.1 and later) compatibility
+ *
  * Revision 3.4  1998/09/23 05:44:27  dl
  * added support for HTTP/1.x answers
  *
@@ -28,7 +31,7 @@
  *
  */
 
-static char *rcsid="$Id: http_lib.c,v 3.4 1998/09/23 05:44:27 dl Exp dl $";
+static char *rcsid="$Id: http_lib.c,v 3.5 1998/09/23 06:19:15 dl Exp $";
 
 #define VERBOSE
 
@@ -77,7 +80,7 @@ char *http_proxy_server=NULL;
 /* proxy server port number or 0 */
 int http_proxy_port=0;
 /* user agent id string */
-static char *http_user_agent="adlib/3 ($Date: 1998/09/23 05:44:27 $)";
+static char *http_user_agent="adlib/3 ($Date: 1998/09/23 06:19:15 $)";
 
 /*
  * read a line from file descriptor

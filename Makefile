@@ -5,7 +5,7 @@
 #  (c)1998 Laurent Demailly
 #  (c)1996 Observatoire de Paris
 #
-# $Id: Makefile,v 1.1 1998/09/23 05:39:40 dl Exp dl $
+# $Id: Makefile,v 1.2 1998/09/23 06:17:55 dl Exp $
 #
 #
 

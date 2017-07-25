@@ -5,9 +5,12 @@
  *  (c) 1996 Observatoire de Paris - Meudon - France
  *  see LICENSE for terms, conditions and DISCLAIMER OF ALL WARRANTIES
  *
- * $Id: http.c,v 1.3 1998/09/23 06:03:45 dl Exp dl $
+ * $Id: http.c,v 1.4 1998/09/23 06:11:55 dl Exp $
  *
  * $Log: http.c,v $
+ * Revision 1.4  1998/09/23 06:11:55  dl
+ * one more lint
+ *
  * Revision 1.3  1998/09/23 06:03:45  dl
  * proxy support (old change which was not checked in back in 96)
  * contact, etc.. infos update
@@ -21,7 +24,7 @@
  */
 
 
-static char *rcsid="$Id: http.c,v 1.3 1998/09/23 06:03:45 dl Exp dl $";
+static char *rcsid="$Id: http.c,v 1.4 1998/09/23 06:11:55 dl Exp $";
 
 
 #include <sys/types.h>
