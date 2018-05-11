@@ -29,8 +29,10 @@ static char *rcsid = "$Id: http.c,v 1.4 1998/09/23 06:11:55 dl Exp $";
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/uio.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include "http_lib.h"
 
@@ -48,13 +50,13 @@ char **argv;
   }
   i = 1;
 
-  if (!strcasecmp(argv[i], "put")) {
+  if (!strcmp(argv[i], "put")) {
     todo = DOPUT;
-  } else if (!strcasecmp(argv[i], "get")) {
+  } else if (!strcmp(argv[i], "get")) {
     todo = DOGET;
-  } else if (!strcasecmp(argv[i], "delete")) {
+  } else if (!strcmp(argv[i], "delete")) {
     todo = DODEL;
-  } else if (!strcasecmp(argv[i], "head")) {
+  } else if (!strcmp(argv[i], "head")) {
     todo = DOHEA;
   }
   if (todo == ERR) {
@@ -79,6 +81,11 @@ char **argv;
     if (proxy)
       free(http_proxy_server);
     return ret;
+  }
+
+  if (!http_init()) {
+    fprintf(stderr, "Failed to initialize http subsystem\n");
+    return 1;
   }
 
   switch (todo) {

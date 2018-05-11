@@ -55,6 +55,9 @@ typedef enum {
 /* prototypes */
 
 #ifndef OSK
+int http_init(void);
+void http_shutdown(void);
+
 http_retcode http_put(char *filename, char *data, int length, int overwrite,
                       char *type);
 http_retcode http_get(char *filename, char **pdata, int *plength,

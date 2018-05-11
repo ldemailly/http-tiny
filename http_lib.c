@@ -38,7 +38,10 @@ static char *rcsid = "$Id: http_lib.c,v 3.5 1998/09/23 06:19:15 dl Exp $";
 /* http_lib - Http data exchanges mini library.
  */
 
-#ifndef OSK
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#elif !defined(OSK)
 /* unix */
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -50,8 +53,7 @@ static char *rcsid = "$Id: http_lib.c,v 3.5 1998/09/23 06:19:15 dl Exp $";
 #include <sys/types.h>
 #include <unistd.h>
 
-static int http_read_line(int fd, char *buffer, int max);
-static int http_read_buffer(int fd, char *buffer, int max);
+#define closesocket close
 #else
 /* OS/9 includes */
 #include <INET/in.h>
@@ -61,12 +63,18 @@ static int http_read_buffer(int fd, char *buffer, int max);
 #include <machine/reg.h>
 #include <modes.h>
 #include <types.h>
+
+#define closesocket close
+
 extern char *malloc();
 #endif /* OS9/Unix */
 
 #include <stdio.h>
 
 #include "http_lib.h"
+
+static int http_read_line(int fd, char *buffer, int max);
+static int http_read_buffer(int fd, char *buffer, int max);
 
 /* pointer to a mallocated string containing server name or NULL */
 char *http_server = NULL;
@@ -92,7 +100,7 @@ int max;                               /* max number of bytes to read */
 { /* not efficient on long lines (multiple unbuffered 1 char reads) */
   int n = 0;
   while (n < max) {
-    if (read(fd, buffer, 1) != 1) {
+    if (recv(fd, buffer, 1, 0) != 1) {
       n = -n;
       break;
     }
@@ -120,7 +128,7 @@ int length;                                 /* number of bytes to read */
 {
   int n, r;
   for (n = 0; n < length; n += r) {
-    r = read(fd, buffer, length - n);
+    r = recv(fd, buffer, length - n, 0);
     if (r <= 0)
       return -n;
     buffer += r;
@@ -143,6 +151,26 @@ static http_retcode http_query(char *command, char *url,
 /* beware that filename+type+rest of header must not exceed MAXBUF */
 /* so we limit filename to 256 and type to 64 chars in put & get */
 #define MAXBUF 512
+
+/*
+ * Initialize / shutdown the Windows Sockets library
+ */
+int http_init(void) {
+#ifdef _WIN32
+  int res;
+  WSADATA wsaData;
+  res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+  return res == 0;
+#else
+  return 1;
+#endif
+}
+
+void http_shutdown(void) {
+#ifdef _WIN32
+  WSACleanup();
+#endif
+}
 
 /*
  * Pseudo general http query
@@ -193,7 +221,7 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
   setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, 0, 0);
 
   /* connect to server */
-  if (connect(s, &server, sizeof(server)) < 0)
+  if (connect(s, (const struct sockaddr *)&server, sizeof(server)) < 0)
     ret = ERRCONN;
   else {
     if (pfd)
@@ -216,16 +244,17 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
     hlg = strlen(header);
 
     /* send header */
-    if (write(s, header, hlg) != hlg)
+    if (send(s, header, hlg, 0) != hlg)
       ret = ERRWRHD;
 
     /* send data */
-    else if (length && data && (write(s, data, length) != length))
+    else if (length && data && (send(s, data, length, 0) != length))
       ret = ERRWRDT;
 
     else {
       /* read result & check */
       ret = http_read_line(s, header, MAXBUF - 1);
+
 #ifdef VERBOSE
       fputs(header, stderr);
       putc('\n', stderr);
@@ -239,7 +268,8 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
     }
   }
   /* close socket */
-  close(s);
+  closesocket(s);
+
   return ret;
 }
 
@@ -321,7 +351,7 @@ char *typebuf; /* allocated buffer where the read data type is returned.
       putc('\n', stderr);
 #endif
       if (n <= 0) {
-        close(fd);
+        closesocket(fd);
         return ERRRDHD;
       }
       /* empty line ? (=> end of header) */
@@ -336,21 +366,21 @@ char *typebuf; /* allocated buffer where the read data type is returned.
         sscanf(header, "content-type: %s", typebuf);
     }
     if (length < 0) {
-      close(fd);
+      closesocket(fd);
       return ERRNOLG;
     }
     if (plength)
       *plength = length;
     if (!(*pdata = malloc(length))) {
-      close(fd);
+      closesocket(fd);
       return ERRMEM;
     }
     n = http_read_buffer(fd, *pdata, length);
-    close(fd);
+    closesocket(fd);
     if (n != length)
       ret = ERRRDDT;
   } else if (ret >= 0)
-    close(fd);
+    closesocket(fd);
   return ret;
 }
 
@@ -395,7 +425,7 @@ char *typebuf; /* allocated buffer where the data type is returned.
       putc('\n', stderr);
 #endif
       if (n <= 0) {
-        close(fd);
+        closesocket(fd);
         return ERRRDHD;
       }
       /* empty line ? (=> end of header) */
@@ -411,9 +441,9 @@ char *typebuf; /* allocated buffer where the data type is returned.
     }
     if (plength)
       *plength = length;
-    close(fd);
+    closesocket(fd);
   } else if (ret >= 0)
-    close(fd);
+    closesocket(fd);
   return ret;
 }
 
@@ -456,7 +486,7 @@ char **pfilename;
     *pfilename = NULL;
   }
 
-  if (strncasecmp("http://", url, 7)) {
+  if (strncmp("http://", url, 7)) {
 #ifdef VERBOSE
     fprintf(stderr, "invalid url (must start with 'http://')\n");
 #endif
