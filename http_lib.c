@@ -182,7 +182,7 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
            proxy ? http_proxy_server
                  : (http_server ? http_server : SERVER_DEFAULT)))) {
     memset((char *)&server, 0, sizeof(server));
-    memmove((char *)&server.sin_addr, hp->h_addr, hp->h_length);
+    memmove((char *)&server.sin_addr, hp->h_addr_list[0], hp->h_length);
     server.sin_family = hp->h_addrtype;
     server.sin_port = (unsigned short)htons(port);
   } else
