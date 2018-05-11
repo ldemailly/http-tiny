@@ -68,8 +68,6 @@ extern char *malloc();
 
 #include "http_lib.h"
 
-#define SERVER_DEFAULT "adonis"
-
 /* pointer to a mallocated string containing server name or NULL */
 char *http_server = NULL;
 /* server port number */
@@ -177,10 +175,11 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
   if (pfd)
     *pfd = -1;
 
+  if (!http_server)
+    return ERRHOST;
+
   /* get host info by name :*/
-  if ((hp = gethostbyname(
-           proxy ? http_proxy_server
-                 : (http_server ? http_server : SERVER_DEFAULT)))) {
+  if ((hp = gethostbyname(proxy ? http_proxy_server : http_server))) {
     memset((char *)&server, 0, sizeof(server));
     memmove((char *)&server.sin_addr, hp->h_addr_list[0], hp->h_length);
     server.sin_family = hp->h_addrtype;
@@ -203,14 +202,15 @@ int *pfd;   /* pointer to variable where to set file descriptor value */
     /* create header */
     if (proxy) {
       sprintf(header,
-              "%s http://%.128s:%d/%.256s HTTP/1.0\015\012User-Agent: "
-              "%s\015\012%s\015\012",
-              command, http_server, http_port, url, http_user_agent,
-              additional_header);
+              "%s http://%.128s:%d/%.256s HTTP/1.0\015\012Host: %s\015\012"
+              "User-Agent: %s\015\012%s\015\012",
+              command, http_server, http_port, url, http_server,
+              http_user_agent, additional_header);
     } else {
       sprintf(header,
-              "%s /%.256s HTTP/1.0\015\012User-Agent: %s\015\012%s\015\012",
-              command, url, http_user_agent, additional_header);
+              "%s /%.256s HTTP/1.0\015\012Host: %s\015\012User-Agent: %s"
+              "\015\012%s\015\012",
+              command, url, http_server, http_user_agent, additional_header);
     }
 
     hlg = strlen(header);
